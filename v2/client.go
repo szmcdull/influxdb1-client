@@ -1,5 +1,5 @@
 // Package client (v2) is the current official Go client for InfluxDB.
-package client // import "github.com/influxdata/influxdb1-client/v2"
+package client // import "github.com/szmcdull/influxdb1-client/v2"
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdata/influxdb1-client/models"
+	"github.com/szmcdull/influxdb1-client/models"
 )
 
 type ContentEncoding string
@@ -39,6 +39,9 @@ type HTTPConfig struct {
 
 	// Password is the influxdb password, optional.
 	Password string
+
+	// Token is the influxdb authorization token, optional.
+	Token string
 
 	// UserAgent is the http User Agent, defaults to "InfluxDBClient".
 	UserAgent string
@@ -132,6 +135,7 @@ func NewHTTPClient(conf HTTPConfig) (Client, error) {
 		url:       *u,
 		username:  conf.Username,
 		password:  conf.Password,
+		token:     conf.Token,
 		useragent: conf.UserAgent,
 		httpClient: &http.Client{
 			Timeout:   conf.Timeout,
@@ -157,7 +161,9 @@ func (c *client) Ping(timeout time.Duration) (time.Duration, string, error) {
 
 	req.Header.Set("User-Agent", c.useragent)
 
-	if c.username != "" {
+	if c.token != "" {
+		req.Header.Set("Authorization", "Token "+c.token)
+	} else if c.username != "" {
 		req.SetBasicAuth(c.username, c.password)
 	}
 
@@ -201,6 +207,7 @@ type client struct {
 	url        url.URL
 	username   string
 	password   string
+	token      string
 	useragent  string
 	httpClient *http.Client
 	transport  *http.Transport
@@ -557,7 +564,7 @@ func (c *client) Query(q Query) (*Response, error) {
 		return nil, err
 	}
 	defer func() {
-		io.Copy(ioutil.Discard, resp.Body) // https://github.com/influxdata/influxdb1-client/issues/58
+		io.Copy(ioutil.Discard, resp.Body) // https://github.com/szmcdull/influxdb1-client/issues/58
 		resp.Body.Close()
 	}()
 
