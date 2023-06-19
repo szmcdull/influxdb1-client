@@ -431,7 +431,9 @@ func (c *client) Write(bp BatchPoints) error {
 	}
 	req.Header.Set("Content-Type", "")
 	req.Header.Set("User-Agent", c.useragent)
-	if c.username != "" {
+	if c.token != "" {
+		req.Header.Set("Authorization", "Token "+c.token)
+	} else if c.username != "" {
 		req.SetBasicAuth(c.username, c.password)
 	}
 
@@ -686,7 +688,9 @@ func (c *client) createDefaultRequest(q Query) (*http.Request, error) {
 	req.Header.Set("Content-Type", "")
 	req.Header.Set("User-Agent", c.useragent)
 
-	if c.username != "" {
+	if c.token != "" {
+		req.Header.Set("Authorization", "Token "+c.token)
+	} else if c.username != "" {
 		req.SetBasicAuth(c.username, c.password)
 	}
 
